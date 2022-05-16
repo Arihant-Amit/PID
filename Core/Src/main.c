@@ -594,7 +594,7 @@ void STARTADCTASK(void const * argument)
   /* USER CODE BEGIN STARTADCTASK */
 
 	KP=0;
-	KI=1;
+	KI=0;
 	KD=0;
 
 
@@ -629,19 +629,45 @@ void STARTADCTASK(void const * argument)
 		currentcount =0;
 
 		error = SetPoint - Feedback;
+
+		if(error < (0.9*SetPoint))
+		{
+
+			KP=KP+0.0001;
+
+
+		}
+		if (error>(0.9*SetPoint))
+		{
+			KP =KP/2;
+			KI =KI+0.0001;
+
+		}
+		if (error>(0.97*SetPoint))
+		{
+			KD =KP;
+			KI=KI;
+			KD=KD+0.0001;
+		}
+		if (error>SetPoint)
+		{
+			KP =KD=KI=0;
+		}
+
+
 		integral = integral + error * countdifference;
 		derivative = (error - previous_error) / countdifference;
 		DAC_VAL = (KP * error) + (KI * integral) + (KD * derivative);
 		previous_error = error;
 
-		//printf("INPUT : %f OUTPUT : %f\r\n",SetPoint,Feedback);
+		printf("INPUT : %d , OUTPUT : %d\r\n",(uint16_t)SetPoint,(uint16_t)Feedback);
 
 		HAL_TIM_Base_Start(&htim3);
 
 
 
 
-    osDelay(1000);
+    osDelay(10);
   }
   /* USER CODE END STARTADCTASK */
 }
